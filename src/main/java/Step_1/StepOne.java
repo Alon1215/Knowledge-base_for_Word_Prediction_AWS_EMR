@@ -1,6 +1,7 @@
 package Step_1;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -10,6 +11,10 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
 
@@ -30,33 +35,34 @@ public class StepOne {
             "היתה", "הא", "ה", "בל", "בין", "בזה", "ב", "אף", "אי", "אותה", "או", "אבל", "א"
     };
 
-    public static class MapClass extends Mapper<LongWritable, Text, Trigram, LongWritable>{
+    public static class MapClass extends Mapper<LongWritable, Text, Trigram, IntWritable>{
+
+
 
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String[] line = value.toString().split("\t");
             String[] gram3 = line[0].split("\\s+");
-            LongWritable occurrences = new LongWritable(Long.parseLong(line[2]));
+            IntWritable occurrences = new IntWritable(Integer.parseInt(line[2]));
             context.write(new Trigram(gram3[0], gram3[1], gram3[2]), occurrences);
 //            context.write(new Trigram( new Text(gram3[0]), new Text(gram3[1]), new Text(gram3[2])), new LongWritable(1));
 
         }
     }
-    public static class ReducerClass extends Reducer<Trigram, LongWritable, Trigram, LongWritable>{
-
+    public static class ReducerClass extends Reducer<Trigram, IntWritable, Trigram, IntWritable>{
         @Override
-        protected void reduce(Trigram key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
-            long sum = 0;
-            for (LongWritable val: values){
+        protected void reduce(Trigram key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+            int sum = 0;
+            for (IntWritable val: values){
                 sum += val.get();
             }
-            context.write(key, new LongWritable(sum));
+            context.write(key, new IntWritable(sum));
         }
     }
-    public static class PartitionerClass extends Partitioner<Trigram, LongWritable>{
+    public static class PartitionerClass extends Partitioner<Trigram, IntWritable>{
         @Override
-        public int getPartition(Trigram trigram, LongWritable longWritable, int i) {
-            return 0;
+        public int getPartition(Trigram trigram, IntWritable count, int numPartitions) {
+            return count.get() % numPartitions;
         }
     }
 
@@ -66,10 +72,21 @@ public class StepOne {
         Job job = Job.getInstance(jobConfiguration);
         job.setJarByClass(StepOne.class);
         job.setMapOutputKeyClass(MapClass.class);
+        job.setCombinerClass(ReducerClass.class);
         job.setReducerClass(ReducerClass.class);
         job.setPartitionerClass(PartitionerClass.class);
         job.setMapOutputKeyClass(Trigram.class);
         job.setMapOutputValueClass(LongWritable.class);
-
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(IntWritable.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+        FileInputFormat.setMinInputSplitSize(job, 2);
+        FileInputFormat.setMaxInputSplitSize(job, 2);
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+        job.setInputFormatClass(TextInputFormat.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
