@@ -1,9 +1,6 @@
 package Step_1;
 
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.io.*;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -12,18 +9,24 @@ import java.io.IOException;
 public class Trigram implements WritableComparable<Trigram> {
 
 
-    private Text word1;
-    private Text word2;
-    private Text word3;
-    private LongWritable r;
+    private final Text word1;
+    private final Text word2;
+    private final Text word3;
 
-
-    public Trigram(Text word1, Text word2, Text word3, LongWritable r) {
-        this.word1 = word1;
-        this.word2 = word2;
-        this.word3 = word3;
-        this.r = r;
+    public Trigram(String s, String s1, String s2) {
+        this.word1 = new Text(s);
+        this.word2 = new Text(s1);
+        this.word3 = new Text(s2);
     }
+
+    public Trigram(){
+        this.word1 = new Text();
+        this.word2 = new Text();
+        this.word3 = new Text();
+    }
+
+
+
 
     public Text getWord1() {
         return word1;
@@ -37,19 +40,26 @@ public class Trigram implements WritableComparable<Trigram> {
         return word3;
     }
 
-    public LongWritable getR() {
-        return r;
-    }
-
     public int compareTo(Trigram o) {
-        return 0;
+            String me = word1.toString() + " " + word2.toString() + " " + word3.toString();
+            String other = o.getWord1().toString() + " "  + o.getWord2().toString() + " "  + o.getWord3().toString();
+            return me.compareTo(other);
     }
 
     public void write(DataOutput dataOutput) throws IOException {
-
+        word1.write(dataOutput);
+        word2.write(dataOutput);
+        word3.write(dataOutput);
     }
 
     public void readFields(DataInput dataInput) throws IOException {
+        word1.readFields(dataInput);
+        word2.readFields(dataInput);
+        word3.readFields(dataInput);
+    }
 
+    @Override
+    public String toString() {
+        return word1.toString() + " " + word2.toString() + " " + word3.toString();
     }
 }
