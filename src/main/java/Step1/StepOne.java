@@ -1,12 +1,10 @@
-package Step_1;
+package Step1;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.*;
-import org.apache.hadoop.mapred.JobConfigurable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Partitioner;
@@ -35,7 +33,7 @@ public class StepOne {
             "היתה", "הא", "ה", "בל", "בין", "בזה", "ב", "אף", "אי", "אותה", "או", "אבל", "א"
     };
 
-    public static class MapClass extends Mapper<LongWritable, Text, Trigram, IntWritable>{
+    public static class MapClass extends Mapper<LongWritable, Text, Trigram, DataPair>{
 
 
 
@@ -43,26 +41,42 @@ public class StepOne {
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String[] line = value.toString().split("\t");
             String[] gram3 = line[0].split("\\s+");
-            IntWritable occurrences = new IntWritable(Integer.parseInt(line[2]));
-            context.write(new Trigram(gram3[0], gram3[1], gram3[2]), occurrences);
-//            context.write(new Trigram( new Text(gram3[0]), new Text(gram3[1]), new Text(gram3[2])), new LongWritable(1));
+            int occurrences = Integer.parseInt(line[2]);
+            int group = (int) Math.round( Math.random() );
+            context.write(new Trigram(gram3[0], gram3[1], gram3[2]),  new DataPair(group , occurrences));
+            context.write(new Trigram("N","",""), new DataPair(occurrences,0));
 
         }
     }
-    public static class ReducerClass extends Reducer<Trigram, IntWritable, Trigram, IntWritable>{
+    public static class ReducerClass extends Reducer<Trigram, DataPair, Trigram, DataPair>{
         @Override
-        protected void reduce(Trigram key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
-            int sum = 0;
-            for (IntWritable val: values){
-                sum += val.get();
+        protected void reduce(Trigram key, Iterable<DataPair> values, Context context) throws IOException, InterruptedException {
+            /* <N, Occurrences> */
+            if(key.getWord1().toString().equals("N")){
+                int sum = 0;
+                for (DataPair val : values) {
+                    sum += val.getSecond().get();
+                }
+                // TODO : fix its not gonna work remember tom
+                context.getConfiguration().set("N",Integer.toString(sum));
+            } else {
+
+                /* <Trigram, <r_0 r_1>> */
+                int r_0 = 0;
+                int r_1 = 0;
+                for (DataPair val : values) {
+                    int occurrences = val.getSecond().get();
+                    if (val.getFirst().get() == 0) r_0 += occurrences;
+                    else r_1 += occurrences;
+                }
+                context.write(key, new DataPair(r_0, r_1));
             }
-            context.write(key, new IntWritable(sum));
         }
     }
-    public static class PartitionerClass extends Partitioner<Trigram, IntWritable>{
+    public static class PartitionerClass extends Partitioner<Trigram, DataPair>{
         @Override
-        public int getPartition(Trigram trigram, IntWritable count, int numPartitions) {
-            return count.get() % numPartitions;
+        public int getPartition(Trigram trigram, DataPair counts, int numPartitions) {
+            return counts.hashCode() % numPartitions;
         }
     }
 
@@ -81,8 +95,6 @@ public class StepOne {
         job.setMapOutputValueClass(IntWritable.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
-        FileInputFormat.setMinInputSplitSize(job, 2);
-        FileInputFormat.setMaxInputSplitSize(job, 2);
         FileInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
         job.setInputFormatClass(TextInputFormat.class);

@@ -1,4 +1,4 @@
-package Step_1;
+package Step1;
 
 import org.apache.hadoop.io.*;
 
