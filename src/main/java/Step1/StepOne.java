@@ -39,10 +39,10 @@ public class StepOne {
 
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-            String[] line = value.toString().split("\t");
-            String[] gram3 = line[0].split("\\s+");
-            int occurrences = Integer.parseInt(line[2]);
-            int group = (int) Math.round( Math.random() );
+            String[] line = value.toString().split("\t"); //parse the line components
+            String[] gram3 = line[0].split("\\s+"); // parse gram
+            int occurrences = Integer.parseInt(line[2]); // parse the gram occurrences
+            int group = (int) Math.round( Math.random() ); // randomly set gram's group 0/1
             context.write(new Trigram(gram3[0], gram3[1], gram3[2]),  new DataPair(group , occurrences));
             context.write(new Trigram("N","",""), new DataPair(occurrences,0));
 
@@ -58,7 +58,8 @@ public class StepOne {
                     sum += val.getSecond().get();
                 }
                 // TODO : fix its not gonna work remember tom
-                context.getConfiguration().set("N",Integer.toString(sum));
+//                context.getConfiguration().set("N",Integer.toString(sum));
+                context.write(key,  new DataPair(sum,0)); // TODO : temporary implementation CHANGE
             } else {
 
                 /* <Trigram, <r_0 r_1>> */
@@ -66,8 +67,12 @@ public class StepOne {
                 int r_1 = 0;
                 for (DataPair val : values) {
                     int occurrences = val.getSecond().get();
-                    if (val.getFirst().get() == 0) r_0 += occurrences;
-                    else r_1 += occurrences;
+                    if (val.getFirst().get() == 0) {
+                        r_0 += occurrences;
+                    }
+                    else {
+                        r_1 += occurrences;
+                    }
                 }
                 context.write(key, new DataPair(r_0, r_1));
             }
@@ -90,7 +95,7 @@ public class StepOne {
         job.setReducerClass(ReducerClass.class);
         job.setPartitionerClass(PartitionerClass.class);
         job.setMapOutputKeyClass(Trigram.class);
-        job.setMapOutputValueClass(LongWritable.class);
+        job.setMapOutputValueClass(DataPair.class);
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(IntWritable.class);
         job.setOutputKeyClass(Text.class);
