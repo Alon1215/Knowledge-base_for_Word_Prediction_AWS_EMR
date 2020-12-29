@@ -82,7 +82,7 @@ public class StepOne {
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         System.out.println("Starting step 1");
-        Configuration jobConfiguration = new Configuration();
+                Configuration jobConfiguration = new Configuration();
         Job job = Job.getInstance(jobConfiguration);
         job.setJarByClass(StepOne.class);
         job.setMapOutputKeyClass(MapClass.class);
