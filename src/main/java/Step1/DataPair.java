@@ -3,6 +3,7 @@ package Step1;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 
+import javax.xml.crypto.Data;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -16,9 +17,11 @@ public class DataPair implements Writable {
     public DataPair(int first, int second) {
         this.first = new IntWritable(first);
         this.second = new IntWritable(second);
-
     }
-
+    public DataPair(){
+        this.first = new IntWritable(0);
+        this.second = new IntWritable(0);
+    }
     public IntWritable getFirst() {
         return first;
     }

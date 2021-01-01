@@ -49,6 +49,8 @@
     <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-common -->
     <dependencyManagement>
         <dependencies>
+
+
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-bom</artifactId>
