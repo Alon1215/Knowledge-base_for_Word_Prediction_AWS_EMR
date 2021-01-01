@@ -19,6 +19,12 @@ public class Trigram implements WritableComparable<Trigram> {
         this.word3 = new Text(s2);
     }
 
+    public Trigram(Text s, Text s1, Text s2) {
+        this.word1 = s;
+        this.word2 = s1;
+        this.word3 = s2;
+    }
+
     public Trigram(){
         this.word1 = new Text("");
         this.word2 = new Text("");

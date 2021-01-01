@@ -24,19 +24,12 @@ public class StepOne {
             if(value.toString().equals(""))
                 return;
             String[] line = value.toString().split("\t"); //parse the line components
-//            for (String l : line){
-//                System.out.println(l);
-//            }
             String[] gram3 = line[0].split(" "); // parse gram
             int occurrences = Integer.parseInt(line[2]); // parse the gram occurrences
             int group = (int) Math.round(Math.random()); // randomly set gram's group 0/1
             System.out.println("Gram " + line[0] + " group " + group);
-//            context.write(new Trigram(gram3[0], gram3[1], gram3[2]),  new DataPair(group , occurrences));
             context.write(new Trigram(gram3[0], gram3[1], gram3[2]),  new DataPair(group , occurrences));
-
-            //  context.write(new Trigram("N","",""), new DataPair(occurrences,0));
             context.getCounter(Counters.NCounter).increment(occurrences);
-
         }
     }
     public static class ReducerClass extends Reducer<Trigram, DataPair, Trigram, DataPair>{
@@ -92,6 +85,5 @@ public class StepOne {
         job.setOutputFormatClass(TextOutputFormat.class);
         System.out.println("Step one finished " + job.waitForCompletion(true));
         job.getConfiguration().setLong("N", job.getCounters().findCounter(MapClass.Counters.NCounter).getValue());
-
     }
 }
