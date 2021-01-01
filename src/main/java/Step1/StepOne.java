@@ -14,9 +14,9 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import java.io.IOException;
 
 public class StepOne {
+    public enum Counters { NCounter }
 
     public static class MapClass extends Mapper<LongWritable, Text, Trigram, DataPair>{
-        static enum Counters { NCounter }
 
 
         @Override
@@ -66,24 +66,5 @@ public class StepOne {
         }
     }
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        System.out.println("Starting step 1");
-        Configuration jobConfiguration = new Configuration();
 
-        Job job = Job.getInstance(jobConfiguration);
-        job.setJarByClass(StepOne.class);
-        job.setMapperClass(MapClass.class);
-        job.setReducerClass(ReducerClass.class);
-        job.setPartitionerClass(PartitionerClass.class);
-        job.setMapOutputKeyClass(Trigram.class);
-        job.setMapOutputValueClass(DataPair.class);
-        job.setOutputKeyClass(Trigram.class);
-        job.setOutputValueClass(DataPair.class);
-        FileInputFormat.addInputPath(job, new Path(args[0]));
-        FileOutputFormat.setOutputPath(job, new Path(args[1]));
-        job.setInputFormatClass(TextInputFormat.class);
-        job.setOutputFormatClass(TextOutputFormat.class);
-        System.out.println("Step one finished " + job.waitForCompletion(true));
-        job.getConfiguration().setLong("N", job.getCounters().findCounter(MapClass.Counters.NCounter).getValue());
-    }
 }

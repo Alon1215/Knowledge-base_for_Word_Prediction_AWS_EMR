@@ -33,7 +33,7 @@
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        Step1.StepOne
+                                        Jobs
                                     </mainClass>
                                 </manifest>
                             </archive>

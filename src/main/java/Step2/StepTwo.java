@@ -27,6 +27,7 @@ public class StepTwo {
         protected void setup(Context context) throws IOException, InterruptedException {
             super.setup(context);
             N = context.getConfiguration().getLong("N", -1);
+            System.out.println("Setup, N=" + N);
         }
 
         @Override
@@ -36,6 +37,7 @@ public class StepTwo {
             Trigram_r1_r2 tri = new Trigram_r1_r2(gram3[0], gram3[1], gram3[2], Integer.parseInt(r0_r1_str[0]), Integer.parseInt(r0_r1_str[1]));
             context.write(new Text("N_0_" + r0_r1_str[0]), tri);
             context.write(new Text("N_1_" + r0_r1_str[1]), tri);
+            System.out.println("map: " + value.toString());
         }
     }
 
@@ -59,6 +61,7 @@ public class StepTwo {
             }
             for (Trigram_r1_r2 val : values) {
                 context.write(val, new DataPair(n_r, t_r));
+                System.out.println("combiner: " + val.toString() + ", " + n_r + ", " +t_r);
             }
         }
     }
@@ -75,7 +78,7 @@ public class StepTwo {
             double prob = (double) ((total_t_r) / (N * total_n_r));
             Trigram tri = new Trigram(key.getWord1(), key.getWord2(), key.getWord3());
             context.write(tri, new DoubleWritable(prob));
-
+            System.out.println("reducer: " + tri.toString() + ", " + prob);
         }
     }
     public static class PartitionerClass extends Partitioner<Trigram, DataPair> {
@@ -85,26 +88,5 @@ public class StepTwo {
         }
     }
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-//        System.out.println("Starting step 1");
-//        Configuration jobConfiguration = new Configuration();
-//        Job job = Job.getInstance(jobConfiguration);
-//        job.setJarByClass(Step1.StepOne.class);
-//        job.setMapOutputKeyClass(Step1.StepOne.MapClass.class);
-//        job.setCombinerClass(Step1.StepOne.ReducerClass.class);
-//        job.setReducerClass(Step1.StepOne.ReducerClass.class);
-//        job.setPartitionerClass(Step1.StepOne.PartitionerClass.class);
-//        job.setMapOutputKeyClass(Trigram.class);
-//        job.setMapOutputValueClass(LongWritable.class);
-//        job.setMapOutputKeyClass(Text.class);
-//        job.setMapOutputValueClass(IntWritable.class);
-//        job.setOutputKeyClass(Text.class);
-//        job.setOutputValueClass(IntWritable.class);
-//        FileInputFormat.addInputPath(job, new Path(args[0]));
-//        FileOutputFormat.setOutputPath(job, new Path(args[1]));
-//        job.setInputFormatClass(TextInputFormat.class);
-//        job.setOutputFormatClass(TextOutputFormat.class);
-//        System.exit(job.waitForCompletion(true) ? 0 : 1);
-    }
 }
 
