@@ -19,12 +19,12 @@ public class Main {
     public static void main(String[] args) {
         final String bucket = "s3://dsp211emr/";
         BasicConfigurator.configure();
-//        AWSCredentialsProvider credentials = new AWSStaticCredentialsProvider(new ProfileCredentialsProvider().getCredentials());
-//        AmazonElasticMapReduce mapReduce = AmazonElasticMapReduceClientBuilder
-//                .standard()
-//                .withRegion(Region.US_EAST_1.toString())
-//                .withCredentials(credentials)
-//                .build();
+        AWSCredentialsProvider credentials = new AWSStaticCredentialsProvider(new ProfileCredentialsProvider().getCredentials());
+        AmazonElasticMapReduce mapReduce = AmazonElasticMapReduceClientBuilder
+                .standard()
+                .withRegion(Region.US_EAST_1.toString())
+                .withCredentials(credentials)
+                .build();
         HadoopJarStepConfig hadoopJarStep = new HadoopJarStepConfig()
                 .withJar("target/stepone.jar")
                 .withMainClass("StepOne")
