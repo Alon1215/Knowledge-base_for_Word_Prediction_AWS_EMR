@@ -25,9 +25,11 @@ public class StepOne {
                 return;
             String[] line = value.toString().split("\t"); //parse the line components
             String[] gram3 = line[0].split(" "); // parse gram
+            if(gram3.length != 3)
+                return;
             int occurrences = Integer.parseInt(line[2]); // parse the gram occurrences
             int group = (int) Math.round(Math.random()); // randomly set gram's group 0/1
-            System.out.println("Gram " + line[0] + " group " + group);
+//            System.out.println("Gram " + line[0] + " group " + group);
             context.write(new Trigram(gram3[0], gram3[1], gram3[2]),  new DataPair(group , occurrences));
             context.getCounter(Counters.NCounter).increment(occurrences);
         }
@@ -39,7 +41,7 @@ public class StepOne {
             int r_0 = 0;
             int r_1 = 0;
             for (DataPair val : values) {
-                System.out.println("First " + val.getFirst().get() + " Second "+ val.getSecond().get());
+//                System.out.println("First " + val.getFirst().get() + " Second "+ val.getSecond().get());
                 int occurrences = val.getSecond().get();
                 if (val.getFirst().get() == 0) {
                     r_0 += occurrences;

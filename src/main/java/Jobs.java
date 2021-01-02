@@ -5,7 +5,8 @@ import Step2.StepTwo;
 import Step2.Trigram_r1_r2;
 import Step3.StepThree;
 import Step3.TaggedKey;
-import Step4.StepFour;
+import Step4.StepFive;
+import Step5.GramResult;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
@@ -17,13 +18,12 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
-import javax.xml.crypto.Data;
 import java.io.IOException;
 
 public class Jobs {
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
     
-        //job3 1
+        //job5 1
         System.out.println("Starting step 1");
         Configuration jobConfiguration = new Configuration();
 
@@ -64,7 +64,7 @@ public class Jobs {
         //job 3
         System.out.println("Starting step 3");
         Job job3 = Job.getInstance(jobConfiguration);
-      //  job3.getConfiguration().setLong("N", job1.getCounters().findCounter(StepOne.Counters.NCounter).getValue());
+      //  job5.getConfiguration().setLong("N", job1.getCounters().findCounter(StepOne.Counters.NCounter).getValue());
         job3.setJarByClass(StepThree.class);
         job3.setMapperClass(StepThree.MapClass.class);
         job3.setReducerClass(StepThree.ReduceClass.class);
@@ -80,23 +80,40 @@ public class Jobs {
         job3.setOutputFormatClass(TextOutputFormat.class);
         System.out.println("Step Three finished " + job3.waitForCompletion(true));
 
-        //job 4
-//        Job job3 = Job.getInstance(jobConfiguration);
-//        job3.getConfiguration().setLong("N", job1.getCounters().findCounter(StepOne.Counters.NCounter).getValue());
-//        job3.setJarByClass(StepFour.class);
-//        job3.setMapperClass(StepFour.MapClass.class);
-//        job3.setReducerClass(StepFour.ReducerClass.class);
-//        job3.setPartitionerClass(StepFour.PartitionerClass.class);
-//        job3.setMapOutputKeyClass(Trigram_r1_r2.class);
-//        job3.setMapOutputValueClass(DataPair.class);
-//        job3.setOutputKeyClass(Trigram.class);
-//        job3.setOutputValueClass(DoubleWritable.class);
-//        FileInputFormat.addInputPath(job3, new Path(args[1]));
-//        FileInputFormat.addInputPath(job3, new Path(args[2]));
-//        FileOutputFormat.setOutputPath(job3, new Path(args[3]));
-//        job3.setInputFormatClass(KeyValueTextInputFormat.class);
-//        job3.setOutputFormatClass(TextOutputFormat.class);
-//        System.out.println("Step Three finished " + job3.waitForCompletion(true));
 
+        //job 4
+        System.out.println("Starting step 4");
+        Job job4 = Job.getInstance(jobConfiguration);
+        job4.getConfiguration().setLong("N", job1.getCounters().findCounter(StepOne.Counters.NCounter).getValue());
+        job4.setJarByClass(StepFive.class);
+        job4.setMapperClass(StepFive.MapClass.class);
+        job4.setReducerClass(StepFive.ReducerClass.class);
+        job4.setPartitionerClass(StepFive.PartitionerClass.class);
+        job4.setMapOutputKeyClass(Trigram.class);
+        job4.setMapOutputValueClass(DataPair.class);
+        job4.setOutputKeyClass(Trigram.class);
+        job4.setOutputValueClass(DoubleWritable.class);
+        FileInputFormat.addInputPath(job4, new Path(args[3]));
+        FileOutputFormat.setOutputPath(job4, new Path(args[4]));
+        job4.setInputFormatClass(KeyValueTextInputFormat.class);
+        job4.setOutputFormatClass(TextOutputFormat.class);
+        System.out.println("Step Four finished " + job4.waitForCompletion(true));
+
+        //job 5
+        System.out.println("Starting step 5");
+        Job job5 = Job.getInstance(jobConfiguration);
+        job5.setJarByClass(StepFive.class);
+        job5.setMapperClass(StepFive.MapClass.class);
+        job5.setReducerClass(StepFive.ReducerClass.class);
+        job5.setPartitionerClass(StepFive.PartitionerClass.class);
+        job5.setMapOutputKeyClass(GramResult.class);
+        job5.setMapOutputValueClass(DoubleWritable.class);
+        job5.setOutputKeyClass(GramResult.class);
+        job5.setOutputValueClass(DoubleWritable.class);
+        FileInputFormat.addInputPath(job5, new Path(args[4]));
+        FileOutputFormat.setOutputPath(job5, new Path(args[5]));
+        job5.setInputFormatClass(KeyValueTextInputFormat.class);
+        job5.setOutputFormatClass(TextOutputFormat.class);
+        System.out.println("Step five finished " + job5.waitForCompletion(true));
     }
 }

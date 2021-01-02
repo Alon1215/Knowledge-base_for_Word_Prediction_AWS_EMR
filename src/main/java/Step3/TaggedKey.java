@@ -28,7 +28,12 @@ public class TaggedKey implements WritableComparable<TaggedKey> {
     }
     public Text getKey(){
         return key;
-    }                                                                       
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof TaggedKey) && (this.tag == ((TaggedKey) o).tag) &&(this.key.equals(((TaggedKey) o).key));
+    }
 
     @Override
     public int compareTo(TaggedKey other) {

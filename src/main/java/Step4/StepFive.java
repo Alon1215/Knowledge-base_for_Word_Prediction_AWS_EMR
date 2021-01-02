@@ -20,10 +20,10 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
 
-public class StepFour {
+public class StepFive {
     protected static long N = 0;
 
-    public static class MapClass extends Mapper<Text, Text, Trigram_r1_r2, DataPair> {
+    public static class MapClass extends Mapper<Text, Text, Trigram, DataPair> {
         @Override
         protected void setup(Context context) throws IOException, InterruptedException {
             super.setup(context);
@@ -35,30 +35,30 @@ public class StepFour {
         protected void map(Text key, Text value, Context context) throws IOException, InterruptedException {
             String[] t = key.toString().split(" ");
             String[] d = value.toString().split(" ");
-            Trigram_r1_r2 tri = new Trigram_r1_r2(t[0], t[1], t[2], Integer.parseInt(t[3]), Integer.parseInt(t[4]));
+            Trigram tri = new Trigram(t[0], t[1], t[2]);
             context.write(tri, new DataPair(Integer.parseInt(d[0]), Integer.parseInt(d[1])));
         }
     }
 
-    public static class ReducerClass extends Reducer<Trigram_r1_r2, DataPair, Trigram, DoubleWritable> {
+    public static class ReducerClass extends Reducer<Trigram, DataPair, Trigram, DoubleWritable> {
         @Override
-        protected void reduce(Trigram_r1_r2 key, Iterable<DataPair> values, Context context) throws IOException, InterruptedException {
-            int total_n_r = 0;
-            int total_t_r = 0;
+        protected void reduce(Trigram key, Iterable<DataPair> values, Context context) throws IOException, InterruptedException {
+            double total_n_r = 0;
+            double total_t_r = 0;
             for (DataPair val : values) {
                 total_n_r += val.getFirst().get();
                 total_t_r += val.getSecond().get();
             }
-            double prob = (double) ((total_t_r) / (N * total_n_r));
+            double prob =  ((total_t_r) / (N * total_n_r));
             Trigram tri = new Trigram(key.getWord1(), key.getWord2(), key.getWord3());
             context.write(tri, new DoubleWritable(prob));
-            System.out.println("reducer: " + tri.toString() + ", " + prob);
+//            System.out.println("reducer: " + tri.toString() + ", " + prob);
         }
     }
 
-    public static class PartitionerClass extends Partitioner<Trigram, DataPair> {
+    public static class PartitionerClass extends Partitioner<Trigram, DoubleWritable> {
         @Override
-        public int getPartition(Trigram trigram, DataPair counts, int numPartitions) {
+        public int getPartition(Trigram trigram, DoubleWritable counts, int numPartitions) {
             return counts.hashCode() % numPartitions;
         }
     }

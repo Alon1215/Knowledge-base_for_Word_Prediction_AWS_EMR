@@ -46,8 +46,8 @@ public class StepThree {
 
         public static class ReduceClass  extends Reducer<TaggedKey,Text,Text,DataPair> {
 
-            Object currentTag = null;
-            Text currentKey = null;
+            int currentTag = 0;
+            String currentKey = "";
             DataPair current_nr_tr = new DataPair();
             boolean writeMode = false;
 
@@ -57,25 +57,32 @@ public class StepThree {
                 // In case the first data set (sorted by the tagged key) was completely received,
                 // any set of the second dataset is written on-the-fly to the context,
                 // by applying the cross product method.
-                if (currentKey == null || !currentKey.equals(taggedKey.getKey())) {
+                if (currentKey == null || !currentKey.equals(taggedKey.getKey().toString())) {
                     current_nr_tr = new DataPair(); // TODO CHANGE
                     writeMode = false;
-                } else
-                    writeMode = (currentTag != null && !currentTag.equals(taggedKey.getTag()));
-
+                } else {
+                    if(currentTag != 0)
+                        if(currentTag != taggedKey.getTag().get())
+                            writeMode = true;
+                }
+//                System.out.println("currentTag1 = " + currentTag + ", currentKey1 = " + currentKey);
+//                System.out.println("WriteMode: " + writeMode + " taggedKey.getTag() = " + taggedKey.getTag() + ", taggedKey.getKey() = " + taggedKey.getKey());
                 if (writeMode)
                     crossProduct(taggedKey.getKey(),values,context);
                 else {
                     for (Text value : values) {
                         String[] new_nr_tr = value.toString().split(" ");
-                        System.out.println(value.toString());
+//                        System.out.println("value: " + value.toString());
                         current_nr_tr = new DataPair(Integer.parseInt(new_nr_tr[0]), Integer.parseInt(new_nr_tr[1]));
                     }
                 }
 
-                currentTag = taggedKey.getTag();
-                currentKey = taggedKey.getKey();
+                currentTag = taggedKey.getTag().get();
+                currentKey = taggedKey.getKey().toString();
+//                System.out.println("currentTag2 = " + currentTag + ", currentKey2 = " + currentKey);
+
             }
+
 
             protected void crossProduct(Text key,Iterable<Text> table2Values ,Context context) throws IOException, InterruptedException {
                 // This specific implementation of the cross product, combine the data of the customers and the orders (

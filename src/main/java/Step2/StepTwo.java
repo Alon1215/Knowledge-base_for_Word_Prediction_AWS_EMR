@@ -30,8 +30,8 @@ public class StepTwo {
             Trigram_r1_r2 tri = new Trigram_r1_r2(gram3[0], gram3[1], gram3[2], Integer.parseInt(r0_r1_str[0]), Integer.parseInt(r0_r1_str[1]));
             context.write(new Text("N_0_" + r0_r1_str[0]), tri);
             context.write(new Text("N_1_" + r0_r1_str[1]), tri);
-            System.out.println("map trigram: " + tri.toString());
-            System.out.println("map datapair: " + value.toString());
+//            System.out.println("map trigram: " + tri.toString());
+//            System.out.println("map datapair: " + value.toString());
         }
     }
 
@@ -39,21 +39,23 @@ public class StepTwo {
 
         @Override
         public void reduce(Text key, Iterable<Trigram_r1_r2> values, Context context) throws IOException, InterruptedException {
-            System.out.println("At Reducer class on Step two");
+//            System.out.println("At Reducer class on Step two");
             int n_r = 0;
             int t_r = 0;
             if(key.toString().charAt(2) == '0') {
                 for (Trigram_r1_r2 val : values) {
                     n_r++;
-                    System.out.println("reducer step two case one");
+//                    System.out.println("reducer step two case one");
                     t_r += val.getR1().get();
+                  //  context.write(new Text(val.getWord1() + " " + val.getWord2() + " " + val.getWord3()), new DataPair(val.getR0().get(), val.getR1().get()));
                 }
             }
             else {
                 for (Trigram_r1_r2 val : values) {
                     n_r++;
-                    System.out.println("reducer step two case two");
+//                    System.out.println("reducer step two case two");
                     t_r += val.getR0().get();
+                    //context.write(new Text(val.getWord1() + " " + val.getWord2() + " " + val.getWord3()), new DataPair(val.getR0().get(), val.getR1().get()));
                 }
             }
             context.write(new Text(key.toString()), new DataPair(n_r, t_r));
