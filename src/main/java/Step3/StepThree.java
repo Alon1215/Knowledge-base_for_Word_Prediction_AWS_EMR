@@ -30,10 +30,12 @@ public class StepThree {
             @Override
             public void map(Text key, Text value, Context context) throws IOException,  InterruptedException {
                 // case 1: input from job 2
+                //<N_{0/1}_{r0/r1}, <N_r, T_r>>
                 if (key.toString().startsWith("N_")){
                     context.write(new TaggedKey(-1, key), value);
                 } else {
                     // case 2: input from job 1
+                    //<Trigram, <r0,r1>>
                     String[] r0_r1 = value.toString().split(" ");
                     context.write(new TaggedKey(1, new Text("N_0_" + r0_r1[0])), key);
                     context.write(new TaggedKey(1, new Text("N_1_" + r0_r1[1])), key);
@@ -66,6 +68,7 @@ public class StepThree {
                 else {
                     for (Text value : values) {
                         String[] new_nr_tr = value.toString().split(" ");
+                        System.out.println(value.toString());
                         current_nr_tr = new DataPair(Integer.parseInt(new_nr_tr[0]), Integer.parseInt(new_nr_tr[1]));
                     }
                 }
