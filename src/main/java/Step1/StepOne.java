@@ -1,5 +1,6 @@
 package Step1;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -7,9 +8,12 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.mortbay.util.StringUtil;
 
 import java.io.IOException;
 
@@ -24,8 +28,12 @@ public class StepOne {
             if(value.toString().equals(""))
                 return;
             String[] line = value.toString().split("\t"); //parse the line components
+            if(line.length < 3)
+                return;
             String[] gram3 = line[0].split(" "); // parse gram
             if(gram3.length != 3)
+                return;
+            if(!StringUtils.isNumeric(line[2]) || line[2].equals(""))
                 return;
             int occurrences = Integer.parseInt(line[2]); // parse the gram occurrences
             int group = (int) Math.round(Math.random()); // randomly set gram's group 0/1
@@ -68,5 +76,26 @@ public class StepOne {
         }
     }
 
+    public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+        System.out.println("Starting step 1");
+        Configuration jobConfiguration = new Configuration();
+
+        Job job1 = Job.getInstance(jobConfiguration);
+        job1.setJarByClass(StepOne.class);
+        job1.setMapperClass(StepOne.MapClass.class);
+        job1.setReducerClass(StepOne.ReducerClass.class);
+        job1.setPartitionerClass(StepOne.PartitionerClass.class);
+        job1.setMapOutputKeyClass(Trigram.class);
+        job1.setMapOutputValueClass(DataPair.class);
+        job1.setOutputKeyClass(Trigram.class);
+        job1.setOutputValueClass(DataPair.class);
+        job1.setNumReduceTasks(1);
+        FileInputFormat.addInputPath(job1, new Path(args[1]));
+        FileOutputFormat.setOutputPath(job1, new Path(args[2]));
+     //   MultipleOutputs.addNamedOutput(job1,);
+        job1.setInputFormatClass(SequenceFileInputFormat.class);
+        job1.setOutputFormatClass(TextOutputFormat.class);
+        System.out.println("Step one finished " + job1.waitForCompletion(true));
+    }
 
 }

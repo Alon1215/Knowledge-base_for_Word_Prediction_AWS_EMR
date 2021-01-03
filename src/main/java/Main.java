@@ -1,3 +1,6 @@
+import Step1.StepOne;
+import Step2.StepTwo;
+import Step3.StepThree;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -25,36 +28,67 @@ public class Main {
                 .withRegion(Region.US_EAST_1.toString())
                 .withCredentials(credentials)
                 .build();
-        HadoopJarStepConfig hadoopJarStep = new HadoopJarStepConfig()
-                .withJar("target/stepone.jar")
+        HadoopJarStepConfig hadoopJarStepOne = new HadoopJarStepConfig()
+                .withJar(bucket + "StepOne.jar")
                 .withMainClass("StepOne")
-                .withArgs("s3://datasets.elasticmapreduce/ngrams/books/20090715/heb-all/3gram/data", bucket + "output_step1");
+                .withArgs("s3://datasets.elasticmapreduce/ngrams/books/20090715/heb-all/3gram/data", bucket + "output_step1/");
 
-        StepConfig stepConfig = new StepConfig()
+        StepConfig stepOneConfig = new StepConfig()
                 .withName("StepOne")
-                .withHadoopJarStep(hadoopJarStep)
+                .withHadoopJarStep(hadoopJarStepOne)
                 .withActionOnFailure("TERMINATE_JOB_FLOW");
 
-//        JobFlowInstancesConfig instances = new JobFlowInstancesConfig()
-//                .withInstanceCount(2)
-//                .withMasterInstanceType(InstanceType.M4_LARGE.toString())
-//                .withSlaveInstanceType(InstanceType.M4_LARGE.toString())
-//                .withHadoopVersion("2.6.0").withEc2KeyName("dsp_key")
-//                .withKeepJobFlowAliveWhenNoSteps(false)
-//                .withPlacement(new PlacementType("us-east-1a"));
+        HadoopJarStepConfig hadoopJarStepTwo = new HadoopJarStepConfig()
+                .withJar(bucket + "StepTwo.jar")
+                .withMainClass("StepTwo")
+                .withArgs(bucket + "output_step1/", bucket + "output_step2/");
 
-//        RunJobFlowRequest runFlowRequest = new RunJobFlowRequest()
-//                .withName("Assignment2_DSP")
-//                .withInstances(instances)
-//                .withSteps(stepConfig)
-//                .withServiceRole("EMR_DefaultRole")
-//                .withJobFlowRole("EMR_EC2_DefaultRole")
-//                .withReleaseLabel("emr-5.11.0")
-//                .withLogUri( bucket + "logs");
-//
-//        RunJobFlowResult runJobFlowResult = mapReduce.runJobFlow(runFlowRequest);
-//        String jobFlowId = runJobFlowResult.getJobFlowId();
-//        System.out.println("Ran job flow with id: " + jobFlowId);
+        StepConfig stepTwoConfig = new StepConfig()
+                .withName("StepTwo")
+                .withHadoopJarStep(hadoopJarStepTwo)
+                .withActionOnFailure("TERMINATE_JOB_FLOW");
+
+        HadoopJarStepConfig hadoopJarStepThree = new HadoopJarStepConfig()
+                .withJar(bucket + "StepThree.jar")
+                .withMainClass("StepThree")
+                .withArgs(bucket + "output_step2/", bucket + "output_step3/");
+
+        StepConfig stepThreeConfig = new StepConfig()
+                .withName("StepThree")
+                .withHadoopJarStep(hadoopJarStepThree)
+                .withActionOnFailure("TERMINATE_JOB_FLOW");
+
+        HadoopJarStepConfig hadoopJarStepFour = new HadoopJarStepConfig()
+                .withJar(bucket + "StepFour.jar")
+                .withMainClass("StepFour")
+                .withArgs(bucket + "output_step3/", bucket + "output_step4/");
+
+        StepConfig stepFourConfig = new StepConfig()
+                .withName("StepFour")
+                .withHadoopJarStep(hadoopJarStepFour)
+                .withActionOnFailure("TERMINATE_JOB_FLOW");
+
+
+        JobFlowInstancesConfig instances = new JobFlowInstancesConfig()
+                .withInstanceCount(8)
+                .withMasterInstanceType(InstanceType.M4_LARGE.toString())
+                .withSlaveInstanceType(InstanceType.M4_LARGE.toString())
+                .withHadoopVersion("2.6.0").withEc2KeyName("dsp_key")
+                .withKeepJobFlowAliveWhenNoSteps(false)
+                .withPlacement(new PlacementType("us-east-1a"));
+
+        RunJobFlowRequest runFlowRequest = new RunJobFlowRequest()
+                .withName("Assignment2_DSP")
+                .withInstances(instances)
+                .withSteps(stepOneConfig, stepTwoConfig, stepThreeConfig, stepFourConfig)
+                .withServiceRole("EMR_DefaultRole")
+                .withJobFlowRole("EMR_EC2_DefaultRole")
+                .withReleaseLabel("emr-5.11.0")
+                .withLogUri( bucket + "logs");
+
+        RunJobFlowResult runJobFlowResult = mapReduce.runJobFlow(runFlowRequest);
+        String jobFlowId = runJobFlowResult.getJobFlowId();
+        System.out.println("Ran job flow with id: " + jobFlowId);
 
     }
 }

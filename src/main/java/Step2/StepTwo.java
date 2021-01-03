@@ -1,18 +1,19 @@
 package Step2;
 
 import Step1.DataPair;
-import Step1.Trigram;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobConfigurable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
@@ -47,7 +48,7 @@ public class StepTwo {
                     n_r++;
 //                    System.out.println("reducer step two case one");
                     t_r += val.getR1().get();
-                  //  context.write(new Text(val.getWord1() + " " + val.getWord2() + " " + val.getWord3()), new DataPair(val.getR0().get(), val.getR1().get()));
+                    //  context.write(new Text(val.getWord1() + " " + val.getWord2() + " " + val.getWord3()), new DataPair(val.getR0().get(), val.getR1().get()));
                 }
             }
             else {
@@ -63,12 +64,29 @@ public class StepTwo {
     }
 
 
-    public static class PartitionerClass extends Partitioner<Trigram, DataPair> {
+    public static class PartitionerClass extends Partitioner<Trigram_r1_r2, DataPair> {
         @Override
-        public int getPartition(Trigram trigram, DataPair counts, int numPartitions) {
+        public int getPartition(Trigram_r1_r2 trigram, DataPair counts, int numPartitions) {
             return counts.hashCode() % numPartitions;
         }
     }
 
+    public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+        System.out.println("Starting step 2");
+        Configuration jobConfiguration = new Configuration();
+        Job job2 = Job.getInstance(jobConfiguration);
+        job2.setJarByClass(StepTwo.class);
+        job2.setMapperClass(StepTwo.MapClass.class);
+        job2.setReducerClass(StepTwo.ReducerClass.class);
+        job2.setPartitionerClass(StepTwo.PartitionerClass.class);
+        job2.setMapOutputKeyClass(Text.class);
+        job2.setMapOutputValueClass(Trigram_r1_r2.class);
+        job2.setOutputKeyClass(Text.class);
+        job2.setOutputValueClass(DataPair.class);
+        FileInputFormat.addInputPath(job2, new Path(args[1]));
+        FileOutputFormat.setOutputPath(job2, new Path(args[2]));
+        job2.setInputFormatClass(KeyValueTextInputFormat.class);
+        job2.setOutputFormatClass(TextOutputFormat.class);
+        System.out.println("Step Two finished " + job2.waitForCompletion(true));
+    }
 }
-
