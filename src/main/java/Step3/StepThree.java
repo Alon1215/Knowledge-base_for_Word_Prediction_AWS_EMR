@@ -92,7 +92,7 @@ public class StepThree {
             // ensure that keys with same key are directed to the same reducer
             @Override
             public int getPartition(TaggedKey key,Text value, int numPartitions) {
-                return  (key.getKey().hashCode() & Integer.MAX_VALUE) % numPartitions;
+                return  (key.getKey().toString().hashCode()  & Integer.MAX_VALUE) % numPartitions;
             }
         }
 

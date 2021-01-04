@@ -31,8 +31,10 @@ public class Trigram implements WritableComparable<Trigram> {
         this.word3 = new Text("");
     }
 
-
-
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof Trigram && ((Trigram) obj).getWord1().equals(this.word1) && ((Trigram) obj).getWord2().equals(this.word2) && ((Trigram) obj).getWord3().equals(this.word3));
+    }
 
     public Text getWord1() {
         return word1;
@@ -46,18 +48,21 @@ public class Trigram implements WritableComparable<Trigram> {
         return word3;
     }
 
+    @Override
     public int compareTo(Trigram o) {
             String me = word1.toString() + " " + word2.toString() + " " + word3.toString();
             String other = o.getWord1().toString() + " "  + o.getWord2().toString() + " "  + o.getWord3().toString();
             return me.compareTo(other);
     }
 
+    @Override
     public void write(DataOutput dataOutput) throws IOException {
         word1.write(dataOutput);
         word2.write(dataOutput);
         word3.write(dataOutput);
     }
 
+    @Override
     public void readFields(DataInput dataInput) throws IOException {
         word1.readFields(dataInput);
         word2.readFields(dataInput);

@@ -36,7 +36,7 @@ public class TaggedKey implements WritableComparable<TaggedKey> {
 
     @Override
     public int compareTo(TaggedKey other) {
-        int i = key.compareTo(other.key);
+        int i = key.toString().compareTo(other.key.toString());
         if (i==0)                                              
             i=tag.compareTo(other.tag);
         return i;

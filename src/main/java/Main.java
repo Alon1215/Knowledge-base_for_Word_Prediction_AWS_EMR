@@ -21,7 +21,7 @@ import software.amazon.awssdk.services.s3.S3ClientBuilder;
 public class Main {
 
     public static void main(String[] args) {
-        boolean localAggregation = args[0].equals("-la");
+        boolean localAggregation = args.length > 0 && args[0].equals("-la");
         final String bucket = "s3://dsp211emr/";
         BasicConfigurator.configure();
         AWSCredentialsProvider credentials = new AWSStaticCredentialsProvider(new ProfileCredentialsProvider().getCredentials());
@@ -91,7 +91,7 @@ public class Main {
         RunJobFlowRequest runFlowRequest = new RunJobFlowRequest()
                 .withName("Assignment2_DSP")
                 .withInstances(instances)
-                .withSteps(stepFourConfig, stepFiveConfig)
+                .withSteps(stepThreeConfig, stepFourConfig, stepFiveConfig)
                 .withServiceRole("EMR_DefaultRole")
                 .withJobFlowRole("EMR_EC2_DefaultRole")
                 .withReleaseLabel("emr-5.11.0")
