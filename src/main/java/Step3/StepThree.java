@@ -47,10 +47,10 @@ public class StepThree {
 
         public static class ReduceClass  extends Reducer<TaggedKey,Text,Text,DataPair> {
 
-            int currentTag = 0;
-            String currentKey = "";
-            DataPair current_nr_tr = new DataPair();
-            boolean writeMode = false;
+            private int currentTag = 0;
+            private String currentKey = "";
+            private DataPair current_nr_tr = new DataPair();
+            private boolean writeMode = false;
 
             @Override
             public void reduce(TaggedKey taggedKey, Iterable<Text> values, Context context) throws IOException, InterruptedException {
@@ -61,15 +61,10 @@ public class StepThree {
                 if (currentKey == null || !currentKey.equals(taggedKey.getKey().toString())) {
                     current_nr_tr = new DataPair(); // TODO CHANGE
                     writeMode = false;
-                } else {
-                    if(currentTag != 0)
-                        if(currentTag != taggedKey.getTag().get())
-                            writeMode = true;
-                }
-//                System.out.println("currentTag1 = " + currentTag + ", currentKey1 = " + currentKey);
-//                System.out.println("WriteMode: " + writeMode + " taggedKey.getTag() = " + taggedKey.getTag() + ", taggedKey.getKey() = " + taggedKey.getKey());
+                } else if (currentTag != 0 && currentTag != taggedKey.getTag().get()) writeMode = true;
+
                 if (writeMode)
-                    crossProduct(taggedKey.getKey(),values,context);
+                    crossProduct(current_nr_tr,values,context);
                 else {
                     for (Text value : values) {
                         String[] new_nr_tr = value.toString().split(" ");
@@ -85,11 +80,11 @@ public class StepThree {
             }
 
 
-            protected void crossProduct(Text key,Iterable<Text> table2Values ,Context context) throws IOException, InterruptedException {
+            protected void crossProduct(DataPair nr_tr,Iterable<Text> table2Values ,Context context) throws IOException, InterruptedException {
                 // This specific implementation of the cross product, combine the data of the customers and the orders (
                 // of a given costumer id).
                 for (Text table2Value : table2Values)
-                    context.write(table2Value, current_nr_tr);
+                    context.write(table2Value, nr_tr);
             }
         }
 
@@ -97,7 +92,7 @@ public class StepThree {
             // ensure that keys with same key are directed to the same reducer
             @Override
             public int getPartition(TaggedKey key,Text value, int numPartitions) {
-                return  key.getKey().hashCode() % numPartitions;
+                return  (key.getKey().hashCode() & Integer.MAX_VALUE) % numPartitions;
             }
         }
 

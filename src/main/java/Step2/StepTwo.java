@@ -2,6 +2,7 @@ package Step2;
 
 import Step1.DataPair;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
@@ -19,6 +20,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
+import java.net.URI;
+import java.util.Dictionary;
 
 public class StepTwo {
 
@@ -64,10 +67,10 @@ public class StepTwo {
     }
 
 
-    public static class PartitionerClass extends Partitioner<Trigram_r1_r2, DataPair> {
+    public static class PartitionerClass extends Partitioner<Text, Trigram_r1_r2> {
         @Override
-        public int getPartition(Trigram_r1_r2 trigram, DataPair counts, int numPartitions) {
-            return counts.hashCode() % numPartitions;
+        public int getPartition(Text n_01_r, Trigram_r1_r2 trigram_r1_r2, int numPartitions) {
+            return n_01_r.hashCode() % numPartitions;
         }
     }
 

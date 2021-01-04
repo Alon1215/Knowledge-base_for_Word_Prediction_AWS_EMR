@@ -2,6 +2,8 @@ package Step1;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -16,25 +18,40 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.mortbay.util.StringUtil;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.URI;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 
 public class StepOne {
     public enum Counters { NCounter }
+    public static final String BUCKET_NAME = "s3://dsp211emr/";
+    private static final char HEBREW_FIRST = (char) 1488;
+    private static final char HEBREW_LAST = (char) 1514;
 
     public static class MapClass extends Mapper<LongWritable, Text, Trigram, DataPair>{
 
+        protected boolean isLegalTrigram(String[] s){
+            for(String str: s) {
+                for (int i = 0; i < str.length(); i++) {
+                    char c = str.charAt(i);
+                    if (c != ' ' && (c < HEBREW_FIRST || c > HEBREW_LAST))
+                        return false;
+                }
+            }
+            return true;
+        }
 
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             if(value.toString().equals(""))
                 return;
             String[] line = value.toString().split("\t"); //parse the line components
-            if(line.length < 3)
-                return;
             String[] gram3 = line[0].split(" "); // parse gram
-            if(gram3.length != 3)
+            if(gram3.length != 3 || !isLegalTrigram(gram3))
                 return;
-            if(!StringUtils.isNumeric(line[2]) || line[2].equals(""))
-                return;
+//            if(!StringUtils.isNumeric(line[2]) || line[2].equals(""))
+//                return;
             int occurrences = Integer.parseInt(line[2]); // parse the gram occurrences
             int group = (int) Math.round(Math.random()); // randomly set gram's group 0/1
 //            System.out.println("Gram " + line[0] + " group " + group);
@@ -62,17 +79,10 @@ public class StepOne {
         }
     }
 
-//    public static class CombinerClass extends Reducer<K2,V2,K3,V3> {
-//
-//        @Override
-//        public void reduce(K2 key, Iterable<V2> values, Context context) throws IOException,  InterruptedException {
-//        }
-//    }
-
     public static class PartitionerClass extends Partitioner<Trigram, DataPair>{
         @Override
-        public int getPartition(Trigram trigram, DataPair counts, int numPartitions) {
-            return counts.hashCode() % numPartitions;
+        public int getPartition(Trigram trigram, DataPair dataPair, int numPartitions) {
+            return dataPair.hashCode() % numPartitions;
         }
     }
 
@@ -89,13 +99,22 @@ public class StepOne {
         job1.setMapOutputValueClass(DataPair.class);
         job1.setOutputKeyClass(Trigram.class);
         job1.setOutputValueClass(DataPair.class);
-        job1.setNumReduceTasks(1);
         FileInputFormat.addInputPath(job1, new Path(args[1]));
         FileOutputFormat.setOutputPath(job1, new Path(args[2]));
      //   MultipleOutputs.addNamedOutput(job1,);
         job1.setInputFormatClass(SequenceFileInputFormat.class);
         job1.setOutputFormatClass(TextOutputFormat.class);
         System.out.println("Step one finished " + job1.waitForCompletion(true));
+//        jobConfiguration.setLong("N", job1.getCounters().findCounter(Counters.NCounter).getValue());
+
+        FileSystem fs = FileSystem.get(URI.create(BUCKET_NAME), job1.getConfiguration());
+        FSDataOutputStream fsDataOutputStream = fs.create(new Path(BUCKET_NAME + "counters_output.txt"));
+        PrintWriter writer = new PrintWriter(fsDataOutputStream);
+  //      char[] b = ByteBuffer.allocate(Long.BYTES).putLong(job1.getCounters().findCounter(Counters.NCounter).getValue()).asCharBuffer().array();
+        writer.write(Long.toString(job1.getCounters().findCounter(Counters.NCounter).getValue()));
+        writer.close();
+        fsDataOutputStream.close();
+        fs.close();
     }
 
 }
