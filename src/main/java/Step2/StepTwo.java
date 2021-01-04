@@ -70,7 +70,7 @@ public class StepTwo {
     public static class PartitionerClass extends Partitioner<Text, Trigram_r1_r2> {
         @Override
         public int getPartition(Text n_01_r, Trigram_r1_r2 trigram_r1_r2, int numPartitions) {
-            return n_01_r.hashCode() % numPartitions;
+            return n_01_r.toString().hashCode() % numPartitions;
         }
     }
 

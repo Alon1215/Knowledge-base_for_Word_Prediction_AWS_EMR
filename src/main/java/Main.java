@@ -91,7 +91,7 @@ public class Main {
         RunJobFlowRequest runFlowRequest = new RunJobFlowRequest()
                 .withName("Assignment2_DSP")
                 .withInstances(instances)
-                .withSteps(stepThreeConfig, stepFourConfig, stepFiveConfig)
+                .withSteps(stepFourConfig, stepFiveConfig)
                 .withServiceRole("EMR_DefaultRole")
                 .withJobFlowRole("EMR_EC2_DefaultRole")
                 .withReleaseLabel("emr-5.11.0")

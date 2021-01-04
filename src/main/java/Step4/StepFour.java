@@ -48,7 +48,7 @@ public class StepFour {
     public static class PartitionerClass extends Partitioner<Trigram, DataPair> {
         @Override
         public int getPartition(Trigram trigram, DataPair counts, int numPartitions) {
-            return trigram.hashCode() % numPartitions;
+            return trigram.toString().hashCode() % numPartitions;
         }
     }
 
