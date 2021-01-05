@@ -1,7 +1,5 @@
 package Step5;
 
-import Step1.DataPair;
-import Step1.Trigram;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -22,11 +20,38 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 
+/**
+ * Step 5
+ * input: outputs of Step 4, text files.
+ *      Each line is:
+ *      <3gram, <N', T'>>
+ *
+ * args: input addresses, output address (in S3)
+ *
+ * Job flow:
+ *      Final step of the assignment.
+ *      Retrieve N from Step 1, and calculate for each the 3gram his value.
+ *      create the final output file.
+ *
+ * output: text files, whereas for each 3gram:
+ *      <3gram, probability>
+ * when:
+ *      probability = T' / (N' * N)
+ *
+ * Output is sorted as required in the assignment.
+ */
 public class StepFive {
 
     protected static long N = -1;
     public static final String BUCKET_NAME = "s3://dsp211emr/";
 
+    /**
+     * Mapper class implementation for Step 5
+     * Setup: retrieve N value from Step 1.
+     *
+     * output: <GramResult, <N', T'>
+     * GramResult := same as 3gram, but is sorted as required in output file
+     */
     public static class MapClass extends Mapper<Text, Text, GramResult, DoubleWritable> {
 
         @Override
@@ -47,6 +72,15 @@ public class StepFive {
         }
     }
 
+    /**
+     * Reducer class implementation for Step 5
+     * output: text files, whereas for each 3gram:
+     *      <3gram, probability>
+     * when:
+     *      probability = T' / (N' * N)
+     *
+     * Output is sorted as required in the assignment.
+     */
     public static class ReducerClass extends Reducer<GramResult, DoubleWritable, GramResult, DoubleWritable> {
         @Override
         protected void reduce(GramResult key, Iterable<DoubleWritable> values, Context context) throws IOException, InterruptedException {
@@ -56,13 +90,29 @@ public class StepFive {
         }
     }
 
+    /**
+     * Partitioner implementation for step 5
+     * Split map result to reducers,
+     * based on the GramResult
+     */
     public static class PartitionerClass extends Partitioner<GramResult, DoubleWritable> {
         @Override
         public int getPartition(GramResult trigram, DoubleWritable prob, int numPartitions) {
-            return trigram.hashCode() % numPartitions;
+            return (trigram.toString().hashCode() & Integer.MAX_VALUE) % numPartitions;
         }
     }
 
+    /**
+     * Main method of step 5
+     * Initiate and configure job 5,
+     * Start it's running on the input file,
+     * after run is completed successfully, upload final output to S3
+     * finish Step 5 run, and all the assignment flow.
+     *
+     * @param args input address, output destination
+     * @throws IOException if input doesn't exist
+     * @throws ClassNotFoundException if Classes of the job specification (Mapper, Reducer ...) is not defined well.
+     */
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 
         Configuration jobConfiguration = new Configuration();
@@ -72,7 +122,6 @@ public class StepFive {
 
         FileSystem fs = FileSystem.get(URI.create(BUCKET_NAME), job5.getConfiguration());
         FSDataInputStream fsDataInputStream = fs.open(new Path("s3://dsp211emr/counters_output.txt"));
-//d        String n = fsDataInputStream.readLine();
         BufferedReader d = new BufferedReader(new InputStreamReader(fsDataInputStream));
         job5.getConfiguration().setLong("N", Long.parseLong(d.readLine()));
 

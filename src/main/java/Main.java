@@ -1,27 +1,23 @@
-import Step1.StepOne;
-import Step2.StepTwo;
-import Step3.StepThree;
-import Step4.StepFour;
-import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
-import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClientBuilder;
 import com.amazonaws.services.elasticmapreduce.model.*;
-import org.apache.hadoop.security.HadoopKerberosName;
 import org.apache.log4j.BasicConfigurator;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ec2.model.InstanceType;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.S3ClientBuilder;
 
+/**
+ * Main function of the assignment.
+ * Responsible for parsing if the run uses local aggregation (args[0]),
+ * and initial the task in the Amazon EMR (with the written steps.
+ */
 public class Main {
 
     public static void main(String[] args) {
-        boolean localAggregation = args.length > 0 && args[0].equals("-la");
+        String localAggregation = (args.length > 0 && args[0].equals("-la")) ? "1" : "0";
+
         final String bucket = "s3://dsp211emr/";
         BasicConfigurator.configure();
         AWSCredentialsProvider credentials = new AWSStaticCredentialsProvider(new ProfileCredentialsProvider().getCredentials());
@@ -33,7 +29,7 @@ public class Main {
         HadoopJarStepConfig hadoopJarStepOne = new HadoopJarStepConfig()
                 .withJar(bucket + "StepOne.jar")
                 .withMainClass("StepOne")
-                .withArgs("s3://datasets.elasticmapreduce/ngrams/books/20090715/heb-all/3gram/data", bucket + "output_step1/");
+                .withArgs(localAggregation, "s3://datasets.elasticmapreduce/ngrams/books/20090715/heb-all/3gram/data", bucket + "output_step1/");
 
         StepConfig stepOneConfig = new StepConfig()
                 .withName("StepOne")
@@ -63,7 +59,7 @@ public class Main {
         HadoopJarStepConfig hadoopJarStepFour = new HadoopJarStepConfig()
                 .withJar(bucket + "StepFour.jar")
                 .withMainClass("StepFour")
-                .withArgs(bucket + "output_step3/", bucket + "output_step4/");
+                .withArgs(localAggregation, bucket + "output_step3/", bucket + "output_step4/");
 
         StepConfig stepFourConfig = new StepConfig()
                 .withName("StepFour")
@@ -91,7 +87,7 @@ public class Main {
         RunJobFlowRequest runFlowRequest = new RunJobFlowRequest()
                 .withName("Assignment2_DSP")
                 .withInstances(instances)
-                .withSteps(stepFourConfig, stepFiveConfig)
+                .withSteps(stepOneConfig, stepTwoConfig, stepThreeConfig, stepFourConfig, stepFiveConfig)
                 .withServiceRole("EMR_DefaultRole")
                 .withJobFlowRole("EMR_EC2_DefaultRole")
                 .withReleaseLabel("emr-5.11.0")
